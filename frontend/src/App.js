@@ -6,54 +6,42 @@ function App() {
   const [newTask, setNewTask] = useState('');
 
   useEffect(() => {
-    fetchTasks();
+    const savedTasks = localStorage.getItem('tasks');
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
   }, []);
 
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch('/api/tasks');
-      const data = await response.json();
-      setTasks(data);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    }
+  const saveTasks = (updatedTasks) => {
+    setTasks(updatedTasks);
+    localStorage.setItem('tasks', JSON.stringify(updatedTasks));
   };
 
-  const addTask = async (e) => {
+  const addTask = (e) => {
     e.preventDefault();
     if (!newTask.trim()) return;
 
-    try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTask })
-      });
-      if (response.ok) {
-        setNewTask('');
-        fetchTasks();
-      }
-    } catch (error) {
-      console.error('Error adding task:', error);
-    }
+    const task = {
+      id: Date.now(),
+      title: newTask,
+      done: false,
+      created_at: new Date().toISOString()
+    };
+    
+    saveTasks([...tasks, task]);
+    setNewTask('');
   };
 
-  const toggleTask = async (id) => {
-    try {
-      await fetch(`/api/tasks/${id}/toggle`, { method: 'PUT' });
-      fetchTasks();
-    } catch (error) {
-      console.error('Error toggling task:', error);
-    }
+  const toggleTask = (id) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === id ? { ...task, done: !task.done } : task
+    );
+    saveTasks(updatedTasks);
   };
 
-  const deleteTask = async (id) => {
-    try {
-      await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-      fetchTasks();
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
+  const deleteTask = (id) => {
+    const updatedTasks = tasks.filter(task => task.id !== id);
+    saveTasks(updatedTasks);
   };
 
   return (
