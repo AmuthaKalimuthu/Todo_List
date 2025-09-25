@@ -2,10 +2,12 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime
-from config import Config
+import os
 
 app = Flask(__name__)
-app.config.from_object(Config)
+app.config["SECRET_KEY"] = "dev-secret-key"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///todo.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 CORS(app)
 
 db = SQLAlchemy(app)
@@ -15,9 +17,6 @@ class Task(db.Model):
     title = db.Column(db.String(200), nullable=False)
     done = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    def __repr__(self):
-        return f"<Task {self.id} {self.title!r}>"
 
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
@@ -64,7 +63,8 @@ def delete_task(task_id):
     db.session.commit()
     return "", 204
 
-# Database initialization moved to init_db.py
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(debug=True)

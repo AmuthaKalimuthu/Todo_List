@@ -35,5 +35,5 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "https://amuthakalimuthu.github.io/Todo_List"
+  "proxy": "http://localhost:5000"
 }
